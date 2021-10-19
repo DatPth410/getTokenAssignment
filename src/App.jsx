@@ -6,6 +6,7 @@ import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
+import axios from 'axios';
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -29,6 +30,8 @@ const Token1Contract = new web3.eth.Contract(contractToken1ABI, contractToken1Ad
 function App() {
   const [resultA, setResultA] = useState("");
   const [resultB, setResultB] = useState("");
+  const [priceA, setPriceA] = useState(0)
+  const [priceB, setPriceB] = useState(0)
   const [totalSupply, setTotalSupply] = useState(0);
   const [reverseA, setReverseA] = useState(0);
   const [reverseB, setReverseB] = useState(0);
@@ -40,6 +43,13 @@ function App() {
     getData()
     getDataToken0()
     getDataToken1()
+    axios.get('https://api.coingecko.com/api/v3/simple/price?ids=kawaii-islands%2Cbinancecoin&vs_currencies=usd').then(function (response) {
+      console.log(response.data["kawaii-islands"]);
+      setPriceA(response.data["kawaii-islands"].usd)
+      // response.data["kawaii-islands"]
+      // error
+      setPriceB(response.data.binancecoin.usd)
+    })
   } ,[])
 
   const getData = async () => {
@@ -50,7 +60,7 @@ function App() {
     setResultB(token1)
     setReverseA(getReserves[0])
     setReverseB(getReserves[1])
-    setTotalSupply(totalSupply/(Math.pow(10,decimals)))
+    setTotalSupply((totalSupply/(Math.pow(10,decimals))).toFixed(2))
   }
 
   const getDataToken0 = async () => {
@@ -60,7 +70,7 @@ function App() {
     const name = await Token0Contract.methods.name().call();
     const symbol = await Token0Contract.methods.symbol().call();
 
-    setReverseA(reverseA/(Math.pow(10, decimals)))
+    setReverseA((reverseA/(Math.pow(10, decimals))).toFixed(2))
     console.log(reverseA)
     console.log(decimals, name, symbol);
   }
@@ -72,8 +82,9 @@ function App() {
     const name = await Token1Contract.methods.name().call();
     const symbol = await Token1Contract.methods.symbol().call();
 
-    setReverseB(reverseB/(Math.pow(10, decimals)))
+    setReverseB((reverseB/(Math.pow(10, decimals))).toFixed(2))
     console.log(reverseB)
+    console.log(typeof(reverseB/(Math.pow(10, decimals))))
     console.log(decimals, name, symbol);
   }
 
@@ -96,22 +107,25 @@ function App() {
             <h1>POOL</h1>
           </Grid>
           <Grid item xs={12}>
-          <p>LP:{totalSupply}</p>
+            <p>LP (in total: {(reverseA*priceA + reverseB*priceB).toFixed(2)} USD): {totalSupply}</p>
           </Grid>
           <Grid item xs={6}>
-          <p>KWT: {reverseA}</p>
+           <p>KWT({priceA} USD): {reverseA} </p>
           </Grid>
           <Grid item xs={6}>
-          <p>WBNB: {reverseB}</p>
+           <p>WBNB({priceB} USD): {reverseB} </p>
           </Grid>
           <Grid item xs={12}>
             <TextField InputLabelProps={{style : {color : 'green'} }} inputProps={{ style: {color: 'white'}}} type="number" id="outlined-basic" label="Your LP" variant="outlined" onChange={handleChange}/>
           </Grid>
           <Grid item xs={6}>
-          <p>KWT: {userReverseA}</p>
+            <p>KWT: {userReverseA.toFixed(2)}</p>
           </Grid>
           <Grid item xs={6}>
-          <p>WBNB: {userReverseB}</p>
+            <p>WBNB: {userReverseB.toFixed(2)}</p>
+          </Grid>
+          <Grid item xs={12}>
+            <p>{(userReverseA*priceA + userReverseB*priceB).toFixed(2)} USD</p>
           </Grid>
         </Grid>
       </Container>
